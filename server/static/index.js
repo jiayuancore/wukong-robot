@@ -147,8 +147,12 @@ $(document).ready(function() {
         var uuid = 'chat' + guid();
         var query = $("input#query")[0].value;
         if (query.trim() == '') {
-            toastr.error('请输入有效的命令');
-            return;
+            var suggestion = $("input#query").attr("placeholder");
+            if(suggestion.trim() == ''){
+                toastr.error('请输入有效的命令');
+                return;
+            }
+            query = suggestion
         }
         appendHistory(0, query, uuid);
         $('input#query').val('');
