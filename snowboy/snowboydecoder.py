@@ -68,7 +68,8 @@ def play_audio_file(fname=DETECT_DING):
     ding_wav = wave.open(fname, "rb")
     ding_data = ding_wav.readframes(ding_wav.getnframes())
     with no_alsa_error():
-        audio = pyaudio.PyAudio()
+        # audio = pyaudio.PyAudio()
+        audio = 1
     stream_out = audio.open(
         format=audio.get_format_from_width(ding_wav.getsampwidth()),
         channels=ding_wav.getnchannels(),

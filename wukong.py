@@ -92,7 +92,8 @@ class Wukong(object):
         server.run(self.conversation, self, debug=self._debug)
         try:
             # 初始化离线唤醒
-            detector.initDetector(self)
+            # detector.initDetector(self)
+            a=1  # 不需要唤醒
         except AttributeError:
             logger.error("初始化离线唤醒功能失败", stack_info=True)
             pass

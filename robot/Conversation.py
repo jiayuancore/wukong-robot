@@ -11,7 +11,7 @@ import traceback
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from snowboy import snowboydecoder
+# from snowboy import snowboydecoder
 
 from robot.LifeCycleHandler import LifeCycleHandler
 from robot.Brain import Brain
@@ -419,19 +419,19 @@ class Conversation(object):
         try:
             if not silent:
                 self.lifeCycleHandler.onWakeup()
-            listener = snowboydecoder.ActiveListener(
-                [constants.getHotwordModel(config.get("hotword", "wukong.pmdl"))]
-            )
-            voice = listener.listen(
-                silent_count_threshold=config.get("silent_threshold", 15),
-                recording_timeout=config.get("recording_timeout", 5) * 4,
-            )
-            if not silent:
-                self.lifeCycleHandler.onThink()
-            if voice:
-                query = self.asr.transcribe(voice)
-                utils.check_and_delete(voice)
-                return query
+            # listener = snowboydecoder.ActiveListener(
+            #     [constants.getHotwordModel(config.get("hotword", "wukong.pmdl"))]
+            # )
+            # voice = listener.listen(
+            #     silent_count_threshold=config.get("silent_threshold", 15),
+            #     recording_timeout=config.get("recording_timeout", 5) * 4,
+            # )
+            # if not silent:
+            #     self.lifeCycleHandler.onThink()
+            # if voice:
+            #     query = self.asr.transcribe(voice)
+            #     utils.check_and_delete(voice)
+            #     return query
             return ""
         except Exception as e:
             logger.error(f"主动聆听失败：{e}", stack_info=True)
