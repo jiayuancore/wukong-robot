@@ -21,7 +21,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 logger = logging.getLogger(__name__)
 
 
-class Wukong(object):
+class ChatRobot(object):
 
     _profiling = False
     _debug = False
@@ -33,13 +33,6 @@ class Wukong(object):
         self._interrupted = False
         print(
             """
-********************************************************
-*          wukong-robot - 中文语音对话机器人           *
-*          (c) 2019 潘伟洲 <m@hahack.com>              *
-*               当前版本号:  {}                      *
-*     https://github.com/wzpan/wukong-robot.git        *
-********************************************************
-
             后台管理端：http://{}:{}
             如需退出，可以按 Ctrl-4 组合键
 
@@ -53,7 +46,7 @@ class Wukong(object):
         )
 
         self.conversation = Conversation(self._profiling)
-        self.conversation.say(f"{config.get('first_name', '主人')} 你好！试试对我喊唤醒词叫醒我吧", True)
+        self.conversation.say(f"你好！我是 Robo对话机器人Demo", True)
         self.lifeCycleHandler = LifeCycleHandler(self.conversation)
         self.lifeCycleHandler.onInit()
 
@@ -101,14 +94,13 @@ class Wukong(object):
     def help(self):
         print(
             """=====================================================================================
-    python3 wukong.py [命令]
+    python3 chat.py [命令]
     可选命令：
       md5                      - 用于计算字符串的 md5 值，常用于密码设置
-      update                   - 手动更新 wukong-robot
+      update                   - 手动更新
       upload [thredNum]        - 手动上传 QA 集语料，重建 solr 索引。
                                  threadNum 表示上传时开启的线程数（可选。默认值为 10）
       profiling                - 运行过程中打印耗时数据
-    如需更多帮助，请访问：https://wukong.hahack.com/#/run
 ====================================================================================="""
         )
 
@@ -185,10 +177,10 @@ class Wukong(object):
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        wukong = Wukong()
-        wukong.run()
+        robot = ChatRobot()
+        robot.run()
     elif "-h" in (sys.argv):
-        wukong = Wukong()
-        wukong.help()
+        robot = ChatRobot()
+        robot.help()
     else:
-        fire.Fire(Wukong)
+        fire.Fire(ChatRobot)
