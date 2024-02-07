@@ -99,7 +99,7 @@ class MessageUpdatesHandler(BaseHandler):
                 messages = history.get_messages_since(cursor)
             if self.request.connection.stream.closed():
                 return
-            res = {"code": 0, "message": "ok", "history": json.dumps(messages)}
+            res = {"code": 0, "message": "ok", "history": messages}
             self.write(json.dumps(res))
         self.finish()
 

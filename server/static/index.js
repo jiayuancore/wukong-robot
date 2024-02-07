@@ -241,7 +241,7 @@ var updater = {
 
     newMessages: function(response) {
         if (response.code != 0 || !response.history) return;
-        var messages = JSON.parse(response.history);
+        var messages = response.history;
         updater.cursor = messages[messages.length - 1].uuid;
         console.log(messages.length, "new messages, cursor:", updater.cursor);
         for (var i = 0; i < messages.length; i++) {
