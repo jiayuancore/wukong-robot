@@ -24,16 +24,12 @@ from tools import make_json, solr_tools
 
 logger = logging.getLogger(__name__)
 
-conversation, wukong = None, None
+conversation, robot = None, None
 commiting = False
 
 suggestions = [
-    "现在几点",
-    "你吃饭了吗",
-    "上海的天气",
-    "写一首关于大海的诗",
-    "来玩成语接龙",
-    "我有多少邮件",
+    "看一下今天的生产情况",
+    "苏州的天气",
     "你叫什么名字",
     "讲个笑话",
 ]
@@ -57,7 +53,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
 class MainHandler(BaseHandler):
     def get(self):
-        global conversation, wukong, suggestions
+        global conversation, robot, suggestions
         if not self.isValidated():
             self.redirect("/login")
             return
@@ -239,7 +235,7 @@ class LogPageHandler(BaseHandler):
 
 class OperateHandler(BaseHandler):
     def post(self):
-        global wukong
+        global robot
         if self.validate(self.get_argument("validate", default=None)):
             type = self.get_argument("type")
             if type in ["restart", "0"]:
@@ -247,7 +243,7 @@ class OperateHandler(BaseHandler):
                 self.write(json.dumps(res))
                 self.finish()
                 time.sleep(3)
-                wukong.restart()
+                robot.restart()
             else:
                 res = {"code": 1, "message": f"illegal type {type}"}
                 self.write(json.dumps(res))
@@ -386,14 +382,14 @@ class APIHandler(BaseHandler):
 
 class UpdateHandler(BaseHandler):
     def post(self):
-        global wukong
+        global robot
         if self.validate(self.get_argument("validate", default=None)):
-            if wukong.update():
+            if robot.update():
                 res = {"code": 0, "message": "ok"}
                 self.write(json.dumps(res))
                 self.finish()
                 time.sleep(3)
-                wukong.restart()
+                robot.restart()
             else:
                 res = {"code": 1, "message": "更新失败，请手动更新"}
                 self.write(json.dumps(res))
@@ -480,10 +476,10 @@ application = tornado.web.Application(
 )
 
 
-def start_server(con, wk):
-    global conversation, wukong
+def start_server(con, rb):
+    global conversation, robot
     conversation = con
-    wukong = wk
+    robot = rb
     if config.get("/server/enable", False):
         port = config.get("/server/port", "5001")
         try:
@@ -494,7 +490,7 @@ def start_server(con, wk):
             logger.critical(f"服务器启动失败: {e}", stack_info=True)
 
 
-def run(conversation, wukong, debug=False):
+def run(conversation, robot, debug=False):
     settings["debug"] = debug
-    t = threading.Thread(target=lambda: start_server(conversation, wukong))
+    t = threading.Thread(target=lambda: start_server(conversation, robot))
     t.start()
