@@ -130,6 +130,9 @@ class Conversation(object):
             self.brain.restore()
 
     def _InGossip(self, query):
+        """
+        进入闲聊模式
+        """
         return self.immersiveMode in ["Gossip"] and not "闲聊" in query
 
     def doResponse(self, query, UUID="", onSay=None, onStream=None):
@@ -379,7 +382,7 @@ class Conversation(object):
         self.appendHistory(1, msg, UUID=resp_uuid, plugin="")
         self._after_play(msg, audios, "")
 
-    def say(self, msg, cache=False, plugin="", onCompleted=None, append_history=True):
+    def say(self, msg, cache=False, plugin="", onCompleted=None, append_history=True,need_play=False):
         """
         说一句话
         :param msg: 内容
@@ -387,6 +390,7 @@ class Conversation(object):
         :param plugin: 来自哪个插件的消息（将带上插件的说明）
         :param onCompleted: 完成的回调
         :param append_history: 是否要追加到聊天记录
+        :param need_play: 是否需要播放音频
         """
         if append_history:
             self.appendHistory(1, msg, plugin=plugin)
@@ -395,15 +399,18 @@ class Conversation(object):
         if not msg:
             return
 
-        logger.info(f"即将朗读语音：{msg}")
+        logger.info(f"即将回复：{msg}")
         lines = re.split("。|！|？|\!|\?|\n", msg)
         if onCompleted is None:
             onCompleted = lambda: self._onCompleted(msg)
-        self.tts_index = 0
-        self.tts_count = len(lines)
-        logger.debug(f"tts_count: {self.tts_count}")
-        audios = self._tts(lines, cache, onCompleted)
-        self._after_play(msg, audios, plugin)
+
+        if(need_play):
+            logger.info(f"即将朗读语音：{msg}")
+            self.tts_index = 0
+            self.tts_count = len(lines)
+            logger.debug(f"tts_count: {self.tts_count}")
+            audios = self._tts(lines, cache, onCompleted)
+            self._after_play(msg, audios, plugin)
 
     def activeListen(self, silent=False):
         """
