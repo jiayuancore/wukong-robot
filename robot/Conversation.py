@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 
 class Conversation(object):
     def __init__(self, profiling=False):
+        self.uuid = str(uuid.uuid1())
         self.brain, self.asr, self.ai, self.tts, self.nlu = None, None, None, None, None
         self.reInit()
         self.scheduler = Scheduler(self)
@@ -381,6 +382,12 @@ class Conversation(object):
         msg = "".join(lines)
         self.appendHistory(1, msg, UUID=resp_uuid, plugin="")
         self._after_play(msg, audios, "")
+
+    def sayHello(self):
+        """
+        打招呼
+        """
+        self.say(f"你好！我是 Robo对话机器人Demo", True)
 
     def say(self, msg, cache=False, plugin="", onCompleted=None, append_history=True,need_play=False):
         """

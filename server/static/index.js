@@ -15,6 +15,8 @@ var md = window.markdownit({
     }
   });
 
+var conversationId=null;
+
 function appendHistory(type, message, uuid, plugin) {
     if (!uuid) return;
     if (type == 0) {
@@ -156,7 +158,7 @@ $(document).ready(function() {
         }
         appendHistory(0, query, uuid);
         $('input#query').val('');
-        var args = {"type": "text", "query": query, 'validate': getCookie('validation'), "uuid": uuid}
+        var args = {"type": "text", "query": query, 'validate': getCookie('validation'), "uuid": uuid,"conversationId":conversationId}
         $.ajax({
             url: '/chat',
             type: "POST",
@@ -211,8 +213,9 @@ var updater = {
         console.log('updater poll');
         var args = {'validate': getCookie('validation')}        
         if (updater.cursor) args.cursor = updater.cursor;
+        if(conversationId) args.conversationId = conversationId;
         $.ajax({
-            url: '/chat/updates',
+            url: '/chat/subscription',
             type: "POST",
             data: $.param(args),
             success: updater.onSuccess,
@@ -240,8 +243,9 @@ var updater = {
     },
 
     newMessages: function(response) {
-        if (response.code != 0 || !response.history) return;
-        var messages = response.history;
+        if (response.code != 0 || !response.data || !response.data.conversationId || !response.data.history) return;
+        conversationId = response.data.conversationId
+        var messages = response.data.history;
         updater.cursor = messages[messages.length - 1].uuid;
         console.log(messages.length, "new messages, cursor:", updater.cursor);
         for (var i = 0; i < messages.length; i++) {

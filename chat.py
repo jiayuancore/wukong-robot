@@ -9,6 +9,7 @@ import urllib3
 
 from robot.Updater import Updater
 from robot.Conversation import Conversation
+from robot.ConversationManager import ConversationManager
 from robot.LifeCycleHandler import LifeCycleHandler
 
 from robot import config, utils, constants, logging, detector
@@ -45,8 +46,9 @@ class ChatRobot(object):
             )
         )
 
-        self.conversation = Conversation(self._profiling)
-        self.conversation.say(f"你好！我是 Robo对话机器人Demo", True)
+        self.conversationManager = ConversationManager(self._profiling)
+        self.conversation = self.conversationManager.newConversation()
+        self.conversation.sayHello()
         self.lifeCycleHandler = LifeCycleHandler(self.conversation)
         self.lifeCycleHandler.onInit()
 
@@ -82,7 +84,7 @@ class ChatRobot(object):
         # capture SIGINT signal, e.g., Ctrl+C
         signal.signal(signal.SIGINT, self._signal_handler)
         # 后台管理端
-        server.run(self.conversation, self, debug=self._debug)
+        server.run(self.conversationManager, self, debug=self._debug)
         try:
             # 初始化离线唤醒
             # detector.initDetector(self)

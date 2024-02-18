@@ -24,7 +24,7 @@ from tools import make_json, solr_tools
 
 logger = logging.getLogger(__name__)
 
-conversation, robot = None, None
+conversationManager, robot = None, None
 commiting = False
 
 suggestions = [
@@ -53,11 +53,11 @@ class BaseHandler(tornado.web.RequestHandler):
 
 class MainHandler(BaseHandler):
     def get(self):
-        global conversation, robot, suggestions
+        global conversationManager, robot, suggestions
         if not self.isValidated():
             self.redirect("/login")
             return
-        if conversation:
+        if conversationManager:
             info = Updater.fetch()
             suggestion = random.choice(suggestions)
             notices = None
@@ -81,12 +81,23 @@ class MessageUpdatesHandler(BaseHandler):
     """
 
     async def post(self):
+        global conversationManager
+
         if not self.validate(self.get_argument("validate", default=None)):
             res = {"code": 1, "message": "illegal visit"}
             self.write(json.dumps(res))
         else:
+            conversationId = self.get_argument("conversationId", default=None)
             cursor = self.get_argument("cursor", None)
-            history = History()
+
+            conversation = None
+            if conversationId :
+                conversation = conversationManager.getConversation(conversationId)
+            else:
+                conversation = conversationManager.newConversation()
+                conversation.sayHello()
+            conversationId = conversation.uuid
+            history = conversation.history
             messages = history.get_messages_since(cursor)
             while not messages:
                 # Save the Future returned here so we can cancel it in
@@ -99,7 +110,7 @@ class MessageUpdatesHandler(BaseHandler):
                 messages = history.get_messages_since(cursor)
             if self.request.connection.stream.closed():
                 return
-            res = {"code": 0, "message": "ok", "history": messages}
+            res = {"code": 0, "message": "ok", "data": {'conversationId':conversationId,'history':messages}}
             self.write(json.dumps(res))
         self.finish()
 
@@ -154,8 +165,15 @@ class ChatHandler(BaseHandler):
             client.send_response(data, uuid, "")
 
     def post(self):
-        global conversation
+        global conversationManager
         if self.validate(self.get_argument("validate", default=None)):
+            conversation = None
+            conversationId = self.get_argument("conversationId", default=None)
+            if conversationId:
+                conversation = conversationManager.getConversation(conversationId)
+            if not conversation:
+                conversation = conversationManager.getNewConversation()
+
             if self.get_argument("type") == "text":
                 query = self.get_argument("query")
                 uuid = self.get_argument("uuid")
@@ -199,7 +217,7 @@ class ChatHandler(BaseHandler):
 
 class GetHistoryHandler(BaseHandler):
     def get(self):
-        global conversation
+        global conversationManager
         if not self.validate(self.get_argument("validate", default=None)):
             res = {"code": 1, "message": "illegal visit"}
             self.write(json.dumps(res))
@@ -207,7 +225,7 @@ class GetHistoryHandler(BaseHandler):
             res = {
                 "code": 0,
                 "message": "ok",
-                "history": json.dumps(conversation.getHistory().cache),
+                "history": json.dumps(conversationManager.getNewConversation().getHistory().cache),
             }
             self.write(json.dumps(res))
         self.finish()
@@ -445,7 +463,7 @@ application = tornado.web.Application(
         (r"/history", GetHistoryHandler),
         (r"/chat", ChatHandler),
         (r"/websocket", ChatWebSocketHandler),
-        (r"/chat/updates", MessageUpdatesHandler),
+        (r"/chat/subscription", MessageUpdatesHandler),
         (r"/config", ConfigHandler),
         (r"/configpage", ConfigPageHandler),
         (r"/operate", OperateHandler),
@@ -476,9 +494,9 @@ application = tornado.web.Application(
 )
 
 
-def start_server(con, rb):
-    global conversation, robot
-    conversation = con
+def start_server(manager, rb):
+    global conversationManager, robot
+    conversationManager = manager
     robot = rb
     if config.get("/server/enable", False):
         port = config.get("/server/port", "5001")
@@ -490,7 +508,7 @@ def start_server(con, rb):
             logger.critical(f"服务器启动失败: {e}", stack_info=True)
 
 
-def run(conversation, robot, debug=False):
+def run(manager, robot, debug=False):
     settings["debug"] = debug
-    t = threading.Thread(target=lambda: start_server(conversation, robot))
+    t = threading.Thread(target=lambda: start_server(manager, robot))
     t.start()
