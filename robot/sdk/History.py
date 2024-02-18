@@ -14,7 +14,7 @@ def Singleton(cls):
     return _singleton
 
 
-@Singleton
+# @Singleton
 class History(object):
     def __init__(self):
         # cond is notified whenever the message cache is updated
